@@ -1,0 +1,11 @@
+# Project exclude paths
+/target/
+database.txt
+database0.txt
+database12.txt
+database21.txt
+testData.txt
+poznamky
+globalSchedule0.txt
+prettySchedules.txt
+schedules.txt

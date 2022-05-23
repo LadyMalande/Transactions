@@ -1,0 +1,3 @@
+public enum OPS {
+    READ, WRITE, COMMIT, ABORT, START, CHECKPOINT, UNDO;
+}
