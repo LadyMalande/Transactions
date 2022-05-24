@@ -11,9 +11,9 @@ public class Generator {
     int NUMBER_OF_OPERATIONS = 10;
 
 
-    public Generator(int not, float prob){
-        this.numberOfTransactions = not;
-        this.probabilityOfAbort = prob;
+    public Generator(){
+        this.numberOfTransactions = Resources.getNumberOfTransactions();
+        this.probabilityOfAbort = Resources.getProbabilityOfAbort();
     }
 
     public Map<Integer, ArrayList<Operation>> generateTransactionSchedules(){

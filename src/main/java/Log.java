@@ -16,13 +16,21 @@ public class Log {
     public Log(ArrayList<LogEntry> log) {
         this.log = log;
     }
-
-    public void addEntry(LogEntry le){
-        log.add(le);
+    public Log(){
+        this.log = new ArrayList<>();
     }
 
-    public void addEntry(OPS operation, int oid, int tid, Integer[] bi, Integer[] ai, LogEntry backpointer){
-        log.add(new LogEntry(operation, oid, tid, bi, ai, backpointer));
+    public LogEntry addEntry(LogEntry le){
+        log.add(le);
+        //System.out.println("Log: " + le.operation.toString() + ", " + le.oid + ", " + le.tid + ", " + le.bi + ", " + le.ai + ", " + le.backpointer);
+        return le;
+    }
+
+    public LogEntry addEntry(OPS operation, int oid, int tid, Integer[] bi, Integer[] ai, LogEntry backpointer){
+        LogEntry le = new LogEntry(operation, oid, tid, bi, ai, backpointer);
+        log.add(le);
+        //System.out.println("Log: " + operation.toString() + ", " + oid + ", " + tid + ", " + bi + ", " + ai + ", " + backpointer);
+        return le;
     }
 
     public ArrayList<Integer> getActiveTIDs(){
@@ -37,4 +45,22 @@ public class Log {
     }
 
 
+    public LogEntry getBackpointer(Integer tid) {
+        LogEntry backpointer = null;
+        for(LogEntry entry: log){
+            if(entry.tid == tid){
+                backpointer = entry;
+            }
+        }
+        return backpointer;
+    }
+
+    public Integer getStartingIndex(Integer tid) {
+        for(LogEntry le : log){
+            if(le.tid == tid && le.backpointer == null){
+                return log.indexOf(le);
+            }
+        }
+        return Integer.MAX_VALUE;
+    }
 }

@@ -6,69 +6,52 @@ import java.util.*;
 import java.util.concurrent.CyclicBarrier;
 
 public class Main {
-    static int NUMBER_OF_THREADS = 2;
-    static int NUMBER_OF_OPERATIONS = 10;
+    static Integer[] db;
 
     public static void main(String[] args){
-        Tester tester = new Tester();
+        //Tester tester = new Tester();
+        // 0) Initialize db
+        db = new Integer[10];
+        resetdb();
+        Transaction[] transactions = generateTransactions();
+        Log log = new Log();
+        // 1) Generate X transactions with Y maximum number of actions
+        Generator gen = new Generator();
+        Map<Integer, ArrayList<Operation>> schedules = gen.generateTransactionSchedules();
+        PrettyWriter.prettyWriteSchedules(schedules);
+        setSchedulesToTransactions(transactions, schedules);
 
-        // We want to start just 2 threads at the same time, but let's control that
-        // timing from the main thread. That's why we have 3 "parties" instead of 2.
-        /*
-        int numberOfThreads;
-        if(args.length > 0){
-            numberOfThreads = Integer.parseInt(args[0]);
+        // 2) Schedule and run the generated actions
+        DataManager dm = new DataManager(db, log, schedules, transactions);
+        dm.makeGlobalSchedule();
 
-        } else {
-            numberOfThreads = 2;
-        }
-        Integer[] db = new Integer[10];
-        resetdb(db);
-        final CyclicBarrier gate = new CyclicBarrier(numberOfThreads);
+        // 3) RANDOM STOP (restart system when there are still some active transactions) and recover, finish all operations
+        // TODO
+        // is part of the makeGlobalSchedule method
+        // 4) Save the DB state
+        String db1 = writeDatabase(db, false, "FullRun");
+        // 5) Run COMMIT PROJECTION
+        // TODO
+        //runCommitProjection(db);
+        // 6) Save the DB state
+        String db2 = writeDatabase(db, false, "CommitProjection");
+        // 7) Compare the DBs. Accept if they are the same.
+        System.out.println("Databases have the same output: " + Resources.sameContent(new File(db1).toPath(),new File(db2).toPath()));
 
-        DataManager dm = new DataManager(2, db, NUMBER_OF_OPERATIONS);
-        ArrayList<MyThread> threads = new ArrayList<MyThread>();
-        for(int i = 0; i < numberOfThreads; i++){
-            MyThread t = new MyThread(i + 1, gate, dm, NUMBER_OF_OPERATIONS);
-            threads.add(t);
-            t.start();
-        }
-
-// At this point, t1 and t2 are blocking on the gate.
-// Since we gave "3" as the argument, gate is not opened yet.
-// Now if we block on the gate from the main thread, it will open
-// and all threads will start to do stuff!
-
-        System.out.println("all threads started");
-
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        System.out.println();
-        dm.writeSchedulesToFile();
-        dm.writeGlobalScheduleToFile("0");
-        writeDatabase(db, false);
-
-        if(isThereTheSameSequenceSchedule(dm.schedules, db)){
-            System.out.println("There is the same result in the database with permutation " + theSameSequenceSchedule(dm.schedules, db) );
-        } else {
-            System.out.println("There are no equivalent sequential schedules. ");
-        }
-        hasCycle(incidenceMatrixOfSchedule(dm.globalSchedule));
-*/
     }
 
-    private static void resetdb(Integer[] db){
+    private static void setSchedulesToTransactions(Transaction[] ts, Map<Integer, ArrayList<Operation>> schedules) {
+        for(int i = 0; i < Resources.getNumberOfTransactions(); i++){
+            ts[i].setActions(schedules.get(i));
+        }
+    }
+
+    private static void resetdb(){
         for(int i = 0; i < 10; i++){
             db[i] = 10;
         }
     }
-
+/*
     private static void writeSchedules(ArrayList<MyThread> threads, String name){
         try {
             FileWriter myWriter = new FileWriter("schedules"  + name + ".txt");
@@ -87,14 +70,15 @@ public class Main {
             e.printStackTrace();
         }
     }
-
-    private static void writeDatabase(Integer[] db, boolean append){
+*/
+    private static String writeDatabase(Integer[] db, boolean append, String name){
         for(int i = 0; i < 10; i++){
             System.out.print(db[i] + " ");
         }
         System.out.println();
+        String nameOfFile = "database" + name + ".txt";
         try {
-            FileWriter myWriter = new FileWriter("database.txt", append);
+            FileWriter myWriter = new FileWriter(nameOfFile, append);
             for(int i = 0; i < 10; i++){
                     myWriter.write(db[i] + " ");
 
@@ -107,6 +91,7 @@ public class Main {
             System.out.println("An error occurred.");
             e.printStackTrace();
         }
+        return nameOfFile;
     }
 
     private static void sequenceSchedules(){
@@ -116,9 +101,18 @@ public class Main {
         // TODO make thread permutations and do the operations in given thread order
 
 
-        writeDatabase(db, true);
+        writeDatabase(db, true, "Sequence");
     }
 
+    private static Transaction[] generateTransactions(){
+        Transaction[] ts = new Transaction[Resources.getNumberOfTransactions()];
+        for(int i = 0; i < Resources.getNumberOfTransactions(); i++){
+            ts[i] = new Transaction(i, 0);
+        }
+        return ts;
+    }
+
+    /*
     public static boolean isThereTheSameSequenceSchedule(Map<Integer, ArrayList<Operation>> ops, Integer[] db){
         Integer[] newDB = new Integer[10];
         resetdb(newDB);
@@ -268,6 +262,6 @@ public class Main {
         }
         return false;
     }
-
+*/
 
 }

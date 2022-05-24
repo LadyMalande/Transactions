@@ -17,7 +17,7 @@ public class Tester {
         propertiesToCheck = new ArrayList<>();
         satisfies = new ArrayList<>();
         //readGlobalScheduleFromFile();
-        Generator g = new Generator(NUMBER_OF_THREADS, ABORT_PROBABILITY);
+        Generator g = new Generator();
         schedules = g.generateTransactionSchedules();
         PrettyWriter.prettyWriteSchedules(schedules);
         PrettyWriter.prettyWriteSchedulesToFile(schedules);
